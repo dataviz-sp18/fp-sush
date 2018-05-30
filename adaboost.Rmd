@@ -1,0 +1,12 @@
+---
+title: "adaboost"
+author: "Sushmita V Gopalan"
+date: "5/28/2018"
+output: html_document
+---
+
+```{r}
+library(rPython)
+python.load('adaboost.py')
+x1 <- python.get(x1)
+```
