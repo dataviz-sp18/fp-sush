@@ -1,9 +1,10 @@
 #from __future__ import division, print_function
 import numpy as np
 import math
-#from sklearn import datasets
+from sklearn import datasets
 import matplotlib.pyplot as plt
-#import pandas as pd
+import pandas as pd
+np.random.seed(1233)
 
 _viridis_data = [[0.267004, 0.004874, 0.329415],
                  [0.268510, 0.009605, 0.335427],
@@ -102,6 +103,7 @@ class Plot():
         colors = [self.cmap(i) for i in np.linspace(0, 1, len(np.unique(y)))]
 
         # Plot the different class distributions
+        '''
         for i, l in enumerate(np.unique(y)):
             _x1 = x1[y == l]
             _x2 = x2[y == l]
@@ -126,6 +128,7 @@ class Plot():
         plt.ylabel('Principal Component 2')
 
         #plt.show()
+        '''
         return [x1, x2, y]
 
     # Plot the dataset X and the corresponding labels y in 3D using PCA.
@@ -247,15 +250,11 @@ class Adaboost():
                         min_error = error
             # Calculate the alpha which is used to update the sample weights,
             # Alpha is also an approximation of this classifier's proficiency
-            print('done')
             clf.alpha = 0.5 * math.log((1.0 - min_error) / (min_error + 1e-10))
-            print('done')
             # Set all predictions to '1' initially
             predictions = np.ones(np.shape(y))
-            print('done')
             # The indexes where the sample values are below threshold
             negative_idx = (clf.polarity * X[:, clf.feature_index] < clf.polarity * clf.threshold)
-            print('done')
             # Label those as '-1'
             predictions[negative_idx] = -1
             accuracy = accuracy_score(y, predictions)
@@ -263,7 +262,7 @@ class Adaboost():
 
 
             p = Plot().plot_in_2d(X, predictions, title="Adaboost", accuracy=accuracy)
-            fname = 'data' + str(i)
+            fname = 'Iterations/data' + str(i)
             #x1
             np.savetxt(fname + 'x1' + '.txt', p[0], fmt='%f')
 
@@ -296,6 +295,7 @@ class Adaboost():
         n_samples = np.shape(X)[0]
         y_pred = np.zeros((n_samples, 1))
         # For each classifier => label the samples
+        i = 1
         for clf in self.clfs:
             # Set all predictions to '1' initially
             predictions = np.ones(np.shape(y_pred))
@@ -307,6 +307,28 @@ class Adaboost():
             # (alpha indicative of classifier's proficiency)
             y_pred += clf.alpha * predictions
 
+            #pull_pred = np.sign(y_pred).flatten()
+
+            #p = Plot().plot_in_2d(X, pull_pred, title="Adaboost")
+
+            #fname = 'Testing/data' + str(i)
+            #i+= 1
+            #x1
+            #np.savetxt(fname + 'x1' + '.txt', p[0], fmt='%f')
+
+            #print('x1', type(p[0]))
+            #x2
+            #np.savetxt(fname + 'x2' + '.txt', p[1], fmt='%f')
+
+            #print('x2', type(p[1]))
+            #y
+            #np.savetxt(fname + 'y' + '.txt', y_test , fmt='%f')
+
+            #np.savetxt(fname + 'p' + '.txt', p[2], fmt='%f')
+
+
+
+
         # Return sign of prediction sum
         y_pred = np.sign(y_pred).flatten()
 
@@ -314,28 +336,11 @@ class Adaboost():
 
 
 def main():
-    #data = datasets.load_digits()
-    #np.savetxt('testX.txt', data.data, fmt='%f')
-    #np.savetxt('testy.txt', data.target, fmt='%f')
-    #p[0].tofile('test1.dat')
-    #c = np.fromfile('test1.dat', dtype=float)
+    data = datasets.load_digits()
+    
+    X = data.data
+    y = data.target 
 
-    #pd.DataFrame(data['data']).to_csv('X.csv')
-    #pd.DataFrame(data['target']).to_csv('y.csv')
-
-    #X = data.data
-    #y = data.target 
-
-    X = np.loadtxt('testX.txt', dtype= float)
-    #print(X.shape)
-    y = np.loadtxt('testy.txt', dtype= float)
-    #X.tofile('X.dat')
-    #y.tofile('y.dat')
-
-
-
-    print(type(X))
-    print(type(y))
     #X1 = np.asarray(pd.read_csv('X.csv',))
     #y1 = np.asarray(pd.read_csv('y.csv'))
     data = {'data': X, 'target':y}
@@ -358,17 +363,29 @@ def main():
     print("X", type(X))
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
+    np.savetxt('y_test.txt', y_test, fmt='%f')
 
     # Adaboost classification with 5 weak classifiers
-    clf = Adaboost(n_clf=  50)
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
+    k = 15
+    for i in range(k):
+    	clf = Adaboost(n_clf=  i)
+    	clf.fit(X_train, y_train)
+    	y_pred = clf.predict(X_test)
 
-    accuracy = accuracy_score(y_test, y_pred)
-    print ("Accuracy:", accuracy)
+
+    	accuracy = accuracy_score(y_test, y_pred)
+    	print ("Accuracy:", accuracy)
 
     # Reduce dimensions to 2d using pca and plot the results
-    rv = Plot().plot_in_2d(X_test, y_pred, title="Adaboost", accuracy=accuracy)
+    	rv = Plot().plot_in_2d(X_test, y_pred, title="Adaboost", accuracy=accuracy)
+
+    	x1, x2, preds = rv
+    	y = y_test
+
+    	np.savetxt('final_x1' + str(i) + '.txt', x1, fmt='%f')
+    	np.savetxt('final_x2' + str(i) + '.txt', x2, fmt='%f')
+    	np.savetxt('final_preds' + str(i) + '.txt', preds, fmt='%f')
+    	np.savetxt('final_y' + str(i) + '.txt', y, fmt = '%f')
 
     return rv, y_test
 
